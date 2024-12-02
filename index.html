@@ -7,24 +7,148 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
             background-color: #f8f9fa;
             color: #343a40;
+            margin: 0;
             padding: 20px;
+            text-align: center;
         }
         h1 {
             color: #ff6f61;
         }
-        img {
-            max-width: 100%;
-            height: auto;
+        iframe {
+            width: 20%;
+            height: 500px;
+            margin: 20px 0;
+            border-radius: 15px;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .stats-box {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            display: inline-block;
+            text-align: left;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+            width: 50%;
+            max-width: 400px;
+        }
+        button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            background-color: #ff6f61;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #e55b4e;
+        }
+        #main-content, #stats-content {
+            display: none;
+        }
+        #main-content.active, #stats-content.active {
+            display: block;
+        }
+        .animated-text {
+            font-size: 20px;
+            font-weight: bold;
+            color: #e55b4e;
+            margin: 20px 0;
+            animation: fadeIn 3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .video-container {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            width: 560px;
+            height: 315px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .spin-the-wheel {
+            position: absolute;
+            top: 10px;
+            right: 150px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .spin-the-wheel:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
-    <h1>For My Dearest [Her Name]</h1>
-    <p>You make my world brighter every single day. This is a small token of my love for you.</p>
-    <img src="your-image-link.jpg" alt="Our Picture">
-    <p>Love, [Your Name]</p>
+    <!-- Toggle Stats Button -->
+    <button id="toggleButton">View Stats</button>
+
+    <!-- Spin the Wheel Button -->
+    <button class="spin-the-wheel" id="spinTheWheelButton">Spin the Wheel</button>
+
+    <!-- Main Content -->
+    <div id="main-content" class="active">
+        <h1>For My Dearest Nia</h1>
+        <p>You make my world brighter every single day. This is a small token of my love for you.</p>
+        <iframe src="https://drive.google.com/file/d/1RXGdgfxl8OvHGwRggXmx0Nnmk-_CU94A/preview" allow="autoplay"></iframe>
+        <p>Love, Sarthak</p>
+    </div>
+
+    <!-- Stats Content -->
+    <div id="stats-content">
+        <h1>Stats for Nia</h1>
+        <iframe src="https://drive.google.com/file/d/1weOS9mOYMbyq6qvXrHmWr3oPfrdRM6CQ/preview" allow="autoplay"></iframe>
+        <div class="stats-box">
+            <h2>Her Stats</h2>
+            <p><strong>Looks:</strong> ∞ / 10</p>
+            <p><strong>Intelligence:</strong> ∞ / 10</p>
+            <p><strong>Importance in My Life:</strong> ∞ * ∞ / 10</p>
+            <p><strong>Most Valuable Asset:</strong> Eyes</p>
+        </div>
+    </div>
+
+    <script>
+        const toggleButton = document.getElementById('toggleButton');
+        const spinTheWheelButton = document.getElementById('spinTheWheelButton');
+        const mainContent = document.getElementById('main-content');
+        const statsContent = document.getElementById('stats-content');
+
+        toggleButton.addEventListener('click', () => {
+            if (mainContent.classList.contains('active')) {
+                mainContent.classList.remove('active');
+                statsContent.classList.add('active');
+                toggleButton.textContent = 'Back to Main';
+            } else {
+                statsContent.classList.remove('active');
+                mainContent.classList.add('active');
+                toggleButton.textContent = 'View Stats';
+            }
+        });
+
+        // Navigate to Spin the Wheel page
+        spinTheWheelButton.addEventListener('click', () => {
+            window.location.href = 'wheel.html'; // Replace with the actual filename for Spin the Wheel page
+        });
+    </script>
 </body>
 </html>
