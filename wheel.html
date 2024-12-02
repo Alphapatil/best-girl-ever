@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spin the Wheel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #343a40;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            overflow: hidden; /* Prevent scrolling */
+        }
+
+        .wheel-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .tick {
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-bottom: 40px solid black; /* Black tick */
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1;
+        }
+
+        .spin-button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 40px;
+            display: inline-block;
+        }
+
+        .spin-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .spin-button:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+
+        .spin-info {
+            margin-top: 10px;
+            font-size: 1.2em;
+            color: #333;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-top: 20px;
+            color: #007BFF;
+        }
+
+        /* Popup styling */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            z-index: 10;
+            width: 300px;
+            text-align: center;
+        }
+
+        .popup h2 {
+            margin: 0 0 20px;
+        }
+
+        .popup button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .popup button:hover {
+            background-color: #0056b3;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 5;
+        }
+
+        .balloon-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 9;
+            pointer-events: none;
+        }
+
+        .balloon {
+            position: absolute;
+            bottom: -150px;
+            width: 50px;
+            height: 70px;
+            background-color: red;
+            border-radius: 50%;
+            animation: rise 4s ease-out forwards;
+        }
+
+        .balloon:before {
+            content: "";
+            position: absolute;
+            top: 70%;
+            left: 50%;
+            width: 4px;
+            height: 30px;
+            background-color: #000;
+            transform: translateX(-50%);
+        }
+
+        @keyframes rise {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-1500px) scale(0.8);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Spin the Wheel to Win Prizes!!</h1>
+    <div class="wheel-container">
+        <div class="tick"></div>
+        <canvas id="wheel" width="400" height="400"></canvas>
+        <div>
+            <button class="spin-button" id="spinButton" onclick="spinWheel()">Spin</button>
+            <p class="spin-info">Spins left: <span id="spinsLeft">6</span></p>
+        </div>
+    </div>
+    <div class="overlay" id="overlay"></div>
+    <div class="popup" id="popup">
+        <h2 id="prizeMessage"></h2>
+        <button onclick="closePopup()">Okay</button>
+    </div>
+    <div class="balloon-container" id="balloonContainer"></div>
+
+    <script>
+        let spinning = false;
+        let rotation = 0;
+        let spinsLeft = 6;
+
+        const rewardSegments = [
+            { name: "Prize 1", description: "Diablo IV" },
+            { name: "Prize 2", description: "Dior Lipstick" },
+            { name: "Prize 3", description: "H&M gift hamper" },
+            { name: "Prize 4", description: "Nike Air Max" },
+            { name: "Prize 5", description: "Burberry Goddess" },
+            { name: "Prize 6", description: "Fully sponsored trip to Ritz Carlton" },
+        ];
+
+        const colors = [
+            "#FF0000", "#FF9900", "#FFFF00", "#33FF33",
+            "#3399FF", "#9933FF"
+        ];
+
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = canvas.width / 2;
+
+        function updateSpinsLeft() {
+            document.getElementById('spinsLeft').textContent = spinsLeft;
+            if (spinsLeft <= 0) {
+                document.getElementById('spinButton').disabled = true;
+            }
+        }
+
+        function drawWheel() {
+            const segmentAngle = 2 * Math.PI / rewardSegments.length;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < rewardSegments.length; i++) {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, i * segmentAngle, (i + 1) * segmentAngle);
+                ctx.fillStyle = colors[i];
+                ctx.fill();
+                ctx.save();
+
+                ctx.translate(centerX, centerY);
+                ctx.rotate(i * segmentAngle + segmentAngle / 2);
+                ctx.textAlign = "center";
+                ctx.fillStyle = "#FFF";
+                ctx.font = "bold 16px Arial";
+                ctx.fillText(rewardSegments[i].name, radius / 1.4, 0);
+                ctx.restore();
+            }
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 50, 0, 2 * Math.PI);
+            ctx.fillStyle = "#FFF";
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 40, 0, 2 * Math.PI);
+            ctx.fillStyle = "#000";
+            ctx.fill();
+
+            ctx.fillStyle = "#FFF";
+            ctx.font = "bold 20px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("SPIN", centerX, centerY + 7);
+        }
+
+        function spinWheel() {
+            if (spinning || spinsLeft <= 0 || rewardSegments.length === 0) return;
+            spinning = true;
+
+            spinsLeft--;
+            updateSpinsLeft();
+
+            const totalRotation = (Math.random() * 6 + 6) * 360;
+            const segmentAngle = 360 / rewardSegments.length;
+            const targetSegment = Math.floor(Math.random() * rewardSegments.length);
+            const targetAngle = targetSegment * segmentAngle + segmentAngle / 2;
+            const finalRotation = totalRotation + targetAngle - rotation % 360;
+            const spinDuration = 3000;
+            const start = performance.now();
+
+            function animate(timestamp) {
+                const progress = Math.min((timestamp - start) / spinDuration, 1);
+                const currentRotation = rotation + finalRotation * easeOutQuad(progress);
+                drawWheelAtAngle(currentRotation % 360);
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    spinning = false;
+                    rotation = currentRotation % 360;
+                    const wonPrize = rewardSegments.splice(targetSegment, 1)[0];
+                    colors.splice(targetSegment, 1);
+                    drawWheel();
+                    showPopup(wonPrize.description);
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        function drawWheelAtAngle(angle) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate((angle * Math.PI) / 180);
+            ctx.translate(-centerX, -centerY);
+            drawWheel();
+            ctx.restore();
+        }
+
+        function easeOutQuad(t) {
+            return t * (2 - t);
+        }
+
+        function showPopup(prizeDescription) {
+            const popup = document.getElementById('popup');
+            const overlay = document.getElementById('overlay');
+            document.getElementById('prizeMessage').textContent = `Congratulations! You won ${prizeDescription}!`;
+            popup.style.display = 'block';
+            overlay.style.display = 'block';
+            triggerBalloonAnimation();
+        }
+
+        function closePopup() {
+            const popup = document.getElementById('popup');
+            const overlay = document.getElementById('overlay');
+            popup.style.display = 'none';
+            overlay.style.display = 'none';
+        }
+
+        function triggerBalloonAnimation() {
+            const balloonContainer = document.getElementById('balloonContainer');
+            for (let i = 0; i < 20; i++) {
+                const balloon = document.createElement('div');
+                balloon.className = 'balloon';
+                balloon.style.left = `${Math.random() * 100}%`;
+                balloon.style.backgroundColor = `hsl(${Math.random() * 360}, 70%, 50%)`;
+                balloonContainer.appendChild(balloon);
+
+                balloon.addEventListener('animationend', () => {
+                    balloonContainer.removeChild(balloon);
+                });
+            }
+        }
+
+        drawWheel();
+        updateSpinsLeft();
+    </script>
+</body>
+</html>
